@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <div id="box">
+        <div>首页</div>
+        <button onclick="displayDate()">点这里</button>
+
+        <!-- <input id="text" type="text" value="Runoob" /> -->
+        <button id="sendMessage" >发送消息</button>
+        <iframe loading="lazy" id="receiver" src="http://localhost:8000/login?redirect=http%3A%2F%2Flocalhost%3A63342%2Flogin_service%2Fapp%2Ftemplates%2Fhome.html%3Ftoken%3D" width="300" height="360"></iframe>
+    </div>
+</body>
+<script>
+        function setCookie(cname,cvalue,exdays){
+        var d = new Date();
+        d.setTime(d.getTime()+(exdays*24*60*60*1000));
+        var expires = "expires="+d.toGMTString();
+            document.cookie = cname + "=" + cvalue + ";" + expires
+        }
+        function displayDate(){
+            setCookie("user",1232131,3)
+        }
+
+        //读Cookie
+        function getCookie(objName) {//获取指定名称的cookie的值
+            var arrStr = document.cookie.split("; ");
+            for (var i = 0; i < arrStr.length; i++) {
+                var temp = arrStr[i].split("=");
+                if (temp[0] == objName) return unescape(temp[1]);  //解码
+                console.log(temp[1])
+            }
+            return "";
+        }
+        window.onload = function (){
+            console.log(getCookie('token'))
+            console.log(getCookie('session'))
+        }
+
+        window.addEventListener("message", function( event ) {
+                console.log(111111111)
+                console.log(event)
+            if (event.data.oauth){
+                let a = document.createElement('a')
+                a.href = event.data.oauth
+                a.click()
+
+            }
+            // 把子窗口发送过来的数据显示在父窗口中
+            },false );
+</script>
+</html>

@@ -17,24 +17,41 @@ from app.db.service.user_service import UserSql
 base_bp = Blueprint('base')
 
 
+@base_bp.route('/')
+async def index(request: Request):
+    return redirect('/index')
+
+
 @base_bp.route('/index')
 async def index(request: Request):
+    session = request.ctx.session
     template = JinJaTemplate().template_render_async
     response = await template('index.html')
-    response.cookies['token'] = request.ctx.session.get('token')
-    return response
+    response.cookies['token'] = session.get('token')
+    if session.get('redirect'):
+        return redirect('http://localhost:63342/login_service/app/templates/home.html?token=' + session.get('token'))
+    else:
+        template = JinJaTemplate().template_render_async
+        response = await template('index.html')
+        response.cookies['token'] = session.get('token')
+        return response
 
 
 @base_bp.route('/login')
 async def root(request: Request):
     session = request.ctx.session
+    redirect_url = request.args.get('redirect')
+    session['redirect'] = redirect_url
     session["flow"] = _build_auth_code_flow(scopes=app_config.SCOPE)
     template = JinJaTemplate().template_render_async
-    return await template('login.html', auth_url=session["flow"]["auth_uri"])
+    iframeFlag = 'true' if redirect_url else 'false'
+    print(redirect_url, iframeFlag)
+    return await template('login.html', auth_url=session["flow"]["auth_uri"].replace('/v2.0', ''), iframeFlag=iframeFlag)
 
 
 @base_bp.route('/oauth')
 async def get_token(request: Request):
+    print(request.headers)
     session = request.ctx.session
     db_session = request.ctx.db_session
     try:

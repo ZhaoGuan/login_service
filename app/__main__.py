@@ -15,6 +15,7 @@ import jwt
 from .db.service.user_service import UserSql
 
 app = Sanic(__name__)
+app.static('/static/', 'static')
 app.config.SANIC_JWT_ACCESS_TOKEN_NAME = 'jwt'
 
 _base_model_db_session_ctx = ContextVar("db_session")
@@ -42,7 +43,7 @@ async def run_before_handler(request):
     db_session = request.ctx.db_session
     session = request.ctx.session
     user_sql = UserSql(db_session)
-    if request.path not in ['/login', '/oauth']:
+    if request.path not in ['/', '/login', '/oauth', '/static']:
 
         if request.token or session.get("token"):
             token = request.token if request.token else session.get("token")
