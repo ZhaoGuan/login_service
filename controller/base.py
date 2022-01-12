@@ -65,6 +65,7 @@ async def get_token(request: Request):
     redirect_url = session.get('redirect')
     print("重定向地址,{}".format(redirect_url))
     print(request.args)
+    print(request.get_args("code"))
     try:
         cache = _load_cache()
         result = _build_msal_app(cache=cache).acquire_token_by_auth_code_flow(
