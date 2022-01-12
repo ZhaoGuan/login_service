@@ -8,7 +8,7 @@ from sanic_session import Session, InMemorySessionInterface
 
 import settings
 from controller import app_routes
-from databases.mysql.db import async_db
+# from databases.mysql.db import async_db
 
 app = Sanic(__name__)
 app.static('/static', str(settings.BASE_DIR) + '/static')
@@ -20,18 +20,18 @@ Session(app, interface=InMemorySessionInterface())
 CORS(app)
 
 
-@app.middleware("request")
-async def inject_session(request):
-    async with async_db.engine.connect():
-        request.ctx.db_session = async_db()
-        request.ctx.db_session_ctx_token = _base_model_db_session_ctx.set(request.ctx.db_session)
-
-
-@app.middleware("response")
-async def close_session(request, response):
-    if hasattr(request.ctx, "session_ctx_token"):
-        _base_model_db_session_ctx.reset(request.ctx.db_session_ctx_token)
-        await request.ctx.db_session.close()
+# @app.middleware("request")
+# async def inject_session(request):
+#     async with async_db.engine.connect():
+#         request.ctx.db_session = async_db()
+#         request.ctx.db_session_ctx_token = _base_model_db_session_ctx.set(request.ctx.db_session)
+#
+#
+# @app.middleware("response")
+# async def close_session(request, response):
+#     if hasattr(request.ctx, "session_ctx_token"):
+#         _base_model_db_session_ctx.reset(request.ctx.db_session_ctx_token)
+#         await request.ctx.db_session.close()
 
 
 # 强制登录
@@ -45,4 +45,4 @@ async def run_before_handler(request):
 app.blueprint(app_routes)
 
 if __name__ == '__main__':
-    app.run('0.0.0.0', 8000, auto_reload=True)
+    app.run('0.0.0.0', 8001, auto_reload=True)

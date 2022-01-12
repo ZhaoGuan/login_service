@@ -121,4 +121,4 @@ def _load_cache():
 def _build_auth_code_flow(authority=None, scopes=None):
     return _build_msal_app(authority=authority).initiate_auth_code_flow(
         scopes or [],
-        redirect_uri="http://localhost:8000/oauth")
+        redirect_uri=settings.FULL_REDIRECT_PATH)
