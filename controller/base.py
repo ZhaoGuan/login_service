@@ -64,21 +64,21 @@ async def get_token(request: Request):
     session = request.ctx.session
     redirect_url = session.get('redirect')
     print("重定向地址,{}".format(redirect_url))
-    try:
-        cache = _load_cache()
-        result = _build_msal_app(cache=cache).acquire_token_by_auth_code_flow(
-            session.get("flow", {}), request.args)
-        user_info = result.get("id_token_claims")
-        print(user_info)
-        name = user_info.get("name")
-        email = user_info.get("preferred_username")
-        token = result.get("access_token")
-        refresh_token = result.get("refresh_token")
-        print("EXP", user_info.get("exp"))
-        user = {"email": email, "name": name}
-    except Exception as e:
-        print("出现错误:{},重定向到登录!".format(e))
-        return redirect('/login')
+    # try:
+    cache = _load_cache()
+    result = _build_msal_app(cache=cache).acquire_token_by_auth_code_flow(
+        session.get("flow", {}), request.args)
+    user_info = result.get("id_token_claims")
+    print(user_info)
+    name = user_info.get("name")
+    email = user_info.get("preferred_username")
+    token = result.get("access_token")
+    refresh_token = result.get("refresh_token")
+    print("EXP", user_info.get("exp"))
+    user = {"email": email, "name": name}
+    # except Exception as e:
+    #     print("出现错误:{},重定向到登录!".format(e))
+    #     return redirect('/login')
     # 声明所使用的算法
     jwt_headers = {'alg': "HS256"}
     session['token'] = jwt.encode(
