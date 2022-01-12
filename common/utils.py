@@ -1,19 +1,18 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # __author__ = 'Gz'
-import time
-from typing import List
-
-from sanic.log import logger
+import shutil
 import traceback
 import hashlib
 import os
 from urllib import parse
 import yaml
-import datetime
-import pytz
+import logging
+
+logger = logging
 
 
+# 方法调用日志
 def func_result_logger(func_result_info=False, message=""):
     def decorator(func):
         def wrapper(*args, **kw):
@@ -36,6 +35,7 @@ def func_result_logger(func_result_info=False, message=""):
     return decorator
 
 
+# url解析
 def url_parse(url):
     scheme, netloc, path, params, query, fragment = parse.urlparse(url)
     if scheme == "" or netloc == "" or path in "":
@@ -88,40 +88,11 @@ def get_yaml_case(path):
     return [yaml.safe_load(open(file_path)) for file_path in file_path_list]
 
 
-def params_jira_keys(keys: List[str]):
-    result = []
-    for key in keys:
-        if key:
-            try:
-                result.append(key.split('/')[-1].strip(' '))
-            except Exception as e:
-                print(e)
-                return []
-    return result
+def del_dir(path):
+    if os.path.exists(path):
+        shutil.rmtree(path=path)
 
 
-def utc_time_to_timestamp(date_time_str):
-    os.environ['TZ'] = "UTC"
-    try:
-        date_time_obj = datetime.datetime.strptime(date_time_str, "%Y-%m-%dT%H:%M:%S.%fZ")
-        timestamp = date_time_obj.timestamp()
-    except Exception as e:
-        timestamp = False
-    del os.environ['TZ']
-    return timestamp
-
-
-def utc_8_time_to_timestamp(date_time_str):
-    os.environ['TZ'] = "UTC"
-    try:
-        date_time_obj = datetime.datetime.strptime(date_time_str, "%Y-%m-%d %H:%M:%S")
-        timestamp = date_time_obj.timestamp() - 3600 * 8
-    except Exception as e:
-        timestamp = False
-    del os.environ['TZ']
-    return timestamp
-
-
-def tran_objLevel_to_strLevel(level):
-    levels = ['levelOne', 'levelTwo', 'levelThree']
-    return ','.join([level.get(key) for key in levels if level.get(key)])
+def del_file(path):
+    if os.path.exists(path):
+        os.remove(path=path)

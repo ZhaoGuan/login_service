@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# __author__ = 'Gz'
 from sqlalchemy.orm import sessionmaker, session, scoped_session
 from sqlalchemy import create_engine, inspect
 from sqlalchemy.engine import Engine
@@ -6,6 +9,8 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from urllib.parse import quote_plus as urlquote
 import settings
 from contextlib import contextmanager
+
+local_db_config = f'sqlite:///{settings.TEMP_DIR}/local.db'
 
 
 class DB:
@@ -20,9 +25,9 @@ class DB:
         self.is_async = is_async
         self.db_config = self.mysql_config(env)
         if self.is_async:
-            self.engine = create_async_engine(self.db_config, echo=True)
+            self.engine = create_async_engine(self.db_config, echo=True, pool_pre_ping=True)
         else:
-            self.engine = create_engine(self.db_config, echo=True)
+            self.engine = create_engine(self.db_config, echo=True, pool_pre_ping=True)
 
     def mysql_config(self, env):
         if env:
@@ -52,11 +57,7 @@ class DB:
             assert False, "MYSQL配置内容不全"
 
     def __call__(self, *args, **kwargs):
-        # 多数据库
-        if kwargs.get("meter"):
-            return sessionmaker(None, AsyncSession, expire_on_commit=False)()
-        else:
-            return self.session()
+        return self.session()
 
     def session(self):
         if self.is_async:
@@ -64,5 +65,9 @@ class DB:
         else:
             return sessionmaker(self.engine, expire_on_commit=False)()
 
+    def close_db(self):
+        return self.db.close_all()
+
 
 async_db = DB(settings.ENV)
+db = DB(settings.ENV, is_async=False)

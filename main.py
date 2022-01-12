@@ -1,21 +1,17 @@
-import os
 from contextvars import ContextVar
 
+import jwt
 from sanic import Sanic
 from sanic.response import redirect
-from sanic_cors import CORS, cross_origin
+from sanic_cors import CORS
 from sanic_session import Session, InMemorySessionInterface
 
 import settings
-from .controller import app_routes
-from .controller.user import user_app
-from .db.mysql.db import async_db
-import jwt
-
-from .db.service.user_service import UserSql
+from controller import app_routes
+from databases.mysql.db import async_db
 
 app = Sanic(__name__)
-app.static('/static/', 'static')
+app.static('/static', str(settings.BASE_DIR) + '/static')
 app.config.SANIC_JWT_ACCESS_TOKEN_NAME = 'jwt'
 
 _base_model_db_session_ctx = ContextVar("db_session")
@@ -38,25 +34,15 @@ async def close_session(request, response):
         await request.ctx.db_session.close()
 
 
+# 强制登录
 @app.middleware('request')
 async def run_before_handler(request):
-    db_session = request.ctx.db_session
     session = request.ctx.session
-    user_sql = UserSql(db_session)
-    if request.path not in ['/', '/login', '/oauth', '/static']:
-
-        if request.token or session.get("token"):
-            token = request.token if request.token else session.get("token")
-            print(token)
-            try:
-                data = jwt.decode(token, settings.SECRET, algorithms=['HS256'])
-            except Exception as e:
-                print(e)
-                return redirect('/login')
-            request.ctx.user = await user_sql.get_by_uuid(data.get("user_id"))
-        else:
-            return redirect('/login')
+    if request.path not in ['/', '/login', '/oauth'] and not session.get("token") and "/static/" not in request.path:
+        return redirect('/login')
 
 
 app.blueprint(app_routes)
-app.blueprint(user_app)
+
+if __name__ == '__main__':
+    app.run('0.0.0.0', 8000, auto_reload=True)
