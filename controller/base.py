@@ -48,6 +48,7 @@ async def root(request: Request):
         else:
             return redirect('/index')
     session["flow"] = _build_auth_code_flow(scopes=app_config.SCOPE)
+    print("FLOW", session["flow"])
     session['redirect'] = redirect_url
     userData = session.get("user", {})
     JINJA_ENV = Environment(loader=FileSystemLoader(searchpath=settings.TEMPLATES))
@@ -65,18 +66,17 @@ async def get_token(request: Request):
     redirect_url = session.get('redirect')
     print("重定向地址,{}".format(redirect_url))
     print(request.args)
-    print(request.get_args("code"))
     try:
         cache = _load_cache()
         result = _build_msal_app(cache=cache).acquire_token_by_auth_code_flow(
             session.get("flow", {}), request.args)
+        print("RESULT", result)
         user_info = result.get("id_token_claims")
-        print(user_info)
         name = user_info.get("name")
         email = user_info.get("preferred_username")
-        token = result.get("access_token")
-        refresh_token = result.get("refresh_token")
-        print("EXP", user_info.get("exp"))
+        # token = result.get("access_token")
+        # refresh_token = result.get("refresh_token")
+        # print("EXP", user_info.get("exp"))
         user = {"email": email, "name": name}
     except Exception as e:
         print("出现错误:{},重定向到登录!".format(e))
@@ -124,3 +124,12 @@ def _build_auth_code_flow(authority=None, scopes=None):
     return _build_msal_app(authority=authority).initiate_auth_code_flow(
         scopes or [],
         redirect_uri=settings.FULL_REDIRECT_PATH)
+
+
+a = {'error': 'invalid_grant',
+     'error_description': "AADSTS65001: The user or administrator has not consented to use the application with ID '944461cd-bc1a-426c-9b7f-8ca4e7f518c9' named '测试统一登陆服务-1'. Send an interactive authorization request for this user and resource.\r\nTrace ID: 4172a869-f4c8-4447-b35b-4cace2410800\r\nCorrelation ID: 896ddade-6cef-4fc7-9e34-e24d382290a5\r\nTimestamp: 2022-01-13 04:00:08Z",
+     'error_codes': [65001],
+     'timestamp': '2022-01-13 04:00:08Z',
+     'trace_id': '4172a869-f4c8-4447-b35b-4cace2410800',
+     'correlation_id': '896ddade-6cef-4fc7-9e34-e24d382290a5',
+     'suberror': 'consent_required'}
